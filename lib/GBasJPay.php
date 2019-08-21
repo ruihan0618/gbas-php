@@ -19,11 +19,11 @@ class GBasJPay
     /**
      * @var string The base URL for the JPay API.
      */
-    public static $apiLiveBase = 'https://hk2.hcqtech.com';
+    public static $apiLiveBase = 'https://api.jpay.vmart.vip';
     /**
      * @var string The base URL for the JPay API.
      */
-    public static $apiSandboxBase = 'https://hk2.hcqtech.com';
+    public static $apiSandboxBase = 'https://api.jpay.vmart.vip';
 
     /**
      * @var string|null The version of the JPay API to use for requests.
