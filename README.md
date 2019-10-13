@@ -1,4 +1,4 @@
-# JPay PHP bindings
+# GBasJPay PHP bindings
 
 You can sign up for a GBasJPay account at https://jpay.vmart.vip.
 
@@ -11,7 +11,7 @@ PHP 5.6.0 and later.
 You can install the bindings via [Composer](http://getcomposer.org/). Run the following command:
 
 ```bash
-composer require jpaypp/gbas-php
+composer require jpaypp/jpay-php
 ```
 
 To use the bindings, use Composer's [autoload](https://getcomposer.org/doc/01-basic-usage.md#autoloading):
@@ -44,7 +44,7 @@ Simple usage looks like:
 
 ```php
 \GBasJPay\GBasJPay::setDebug(true); //调试模式   true /false
-\GBasJPay\GBasJPay::setApiMode('live'); //环境  live 线上，sandbox 沙盒
+\GBasJPay\GBasJPay::setApiMode('sandbox'); //环境  live 线上，sandbox 沙盒
 \GBasJPay\GBasJPay::setClientId('10000000');   // 设置 CLIENT ID
 \GBasJPay\GBasJPay::setApiKey('BQokikJOvBiI2HlWgH4olfQ2');    // 设置 API Key
 try {

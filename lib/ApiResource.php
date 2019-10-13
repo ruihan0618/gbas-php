@@ -66,61 +66,65 @@ abstract class ApiResource extends GBasJPayObject
      */
     public static function classUrl()
     {
-        return "/api/v1.0/gateway/partners/".GBasJPay::$clientId."/orders/";
+        $base = static::className();
+        return "/v1/${base}s";
     }
 
 
-    public static function _queryParams(){
-
-        $_arr = array('time'=> self::getMilliSecond(),'nonce_str'=> self::getNonceStr(),'sign'=> self::createSign());
-
-        return http_build_query($_arr);
-    }
     /**
+     * @param $list
      * @return string
      */
-    public static function createSign(){
-        //签名步骤一：构造签名参数
-        $string = GBasJPay::$clientId . '&' . self::getMilliSecond() . '&' . self::getNonceStr() . "&" . GBasJPay::$apiKey;
-        echo $string."\r\n";
-        //签名步骤三：SHA256加密
-        $string = hash('sha256', utf8_encode($string));
-        //签名步骤四：所有字符转为小写
-        $result = strtolower($string);
-        return $result;
-    }
+    public static function createSign($list){
 
-    /**
-     * @return array|string
-     */
-    private static function getMilliSecond()
-    {
-        //获取毫秒的时间戳
-        $time = explode(" ", microtime());
-        $millisecond = "000".($time[0] * 1000);
-        $millisecond2 = explode(".", $millisecond);
-        $millisecond = substr($millisecond2[0],-3);
-        $time = $time[1] . $millisecond;
-        return $time;
-    }
+        $_params = self::parseToArray($list,[]);
 
-    /**
-     * @param int $length
-     * @return string
-     */
-    public static function getNonceStr($length = 30)
-    {
-        $chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-        $str = "";
-        for ($i = 0; $i < $length; $i++) {
-            $str .= substr($chars, mt_rand(0, strlen($chars) - 1), 1);
+        ksort($_params);
+        $md5str = "";
+        foreach ($_params as $key => $val) {
+            if (!empty($val)) {
+                $md5str = $md5str . $key . "=" . $val . "&";
+            }
         }
-        return $str;
+        $sign = strtoupper(md5($md5str . "key=" . GBasJPay::$apiKey));
+        return $sign;
     }
 
+
     /**
-     * @return string
-     * @throws InvalidRequest
+     * @param $params
+     * @param $_params
+     * @return mixed
+     */
+    public static function parseToArray($params,$_params){
+
+        if(is_null($params)){
+            return $_params;
+        }
+
+        if(is_string($params)){
+            return $_params;
+        }
+
+        if(!is_array($params)){
+            return $_params;
+        }
+
+        $params['client_id'] = GBasJPay::$clientId;
+
+        foreach ($params as $key=>$param){
+            if(is_array($param)){
+                $_params[$key] = urlencode(json_encode($param));
+            }else{
+                $_params[$key] = urlencode($param);
+            }
+        }
+        return $_params;
+    }
+
+
+    /**
+     * @return string The full API URL for this API resource.
      */
     public function instanceUrl()
     {
@@ -138,9 +142,7 @@ abstract class ApiResource extends GBasJPayObject
     }
 
     /**
-     * @param $id
-     * @return string
-     * @throws InvalidRequest
+     * @return string The full API URL for this API resource.
      */
     public static function instanceUrlWithId($id)
     {
@@ -178,19 +180,19 @@ abstract class ApiResource extends GBasJPayObject
      * @param $options
      * @return array
      * @throws Error\Api
-     * @throws Error\Authentication
+     * @throws InvalidRequest
      */
     protected static function _staticRequest($method, $url, $params, $options)
     {
         $opts = Util\RequestOptions::parse($options);
         $opts->mergeSignOpts(static::$signOpts);
 
+        //sign
+        $sign = self::createSign($params);
 
-        $queryParams = self::_queryParams();
+        $params = array_merge($params, ['sign'=>$sign]);
 
         $requestor = new ApiRequestor($opts->apiKey, static::baseUrl(), $opts->signOpts);
-
-        $url .= "?".$queryParams;
 
         list($response, $opts->apiKey) = $requestor->request($method, $url, $params, $opts->headers);
         foreach ($opts->headers as $k => $v) {
@@ -202,19 +204,19 @@ abstract class ApiResource extends GBasJPayObject
     }
 
     /**
+     * @param $checkUserUrl
      * @param $params
      * @param null $options
      * @return mixed
      * @throws Error\Api
      * @throws InvalidRequest
      */
-    protected static function _retrieve($params, $options = null)
+    protected static function _retrieve($checkUserUrl, $params, $options = null)
     {
 
         self::_validateParams($params);
-        $url = static::classUrl()."/retrieve/".$params['ch'];
 
-        list($response, $opts) = static::_staticRequest('post', $url, $params, $options);
+        list($response, $opts) = static::_staticRequest('get', $checkUserUrl, $params, $options);
         return Util\Util::convertToJPayObject($response, $opts);
 
     }
@@ -250,9 +252,9 @@ abstract class ApiResource extends GBasJPayObject
     protected static function _create($params = null, $options = null)
     {
         self::_validateParams($params);
-        $url = static::classUrl().$params['out_order_no'];
+        $url = static::classUrl();
 
-        list($response, $opts) = static::_staticRequest('put', $url, $params, $options);
+        list($response, $opts) = static::_staticRequest('post', $url, $params, $options);
         return Util\Util::convertToJPayObject($response, $opts);
     }
 

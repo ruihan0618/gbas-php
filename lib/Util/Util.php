@@ -91,8 +91,10 @@ abstract class Util
         $types = [
             'channel' => \GBasJPay\Channel::class,
             'charge' => \GBasJPay\Charge::class,
+            'order' => \GBasJPay\Order::class,
             'refund' => \GBasJPay\Refund::class,
             'transfer' => \GBasJPay\Transfer::class,
+            'user' => \GBasJPay\User::class,
             'withdrawal' => \GBasJPay\Withdrawal::class,
         ];
         if (self::isList($resp)) {

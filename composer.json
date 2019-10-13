@@ -1,20 +1,20 @@
 {
     "name": "jpaypp/gbas-php",
-    "description": "jpaypp php Library",
+    "description": "gbas php Library",
     "keywords": [
         "MasPay",
-        "GBAS",
         "payment processing",
         "pay",
-        "api"
+        "api",
+        "vmart"
     ],
     "authors": [
         {
             "name": "MasPay team",
-            "homepage": "https://jpay.vmart.vip/"
+            "homepage": "https://github.com/jpaypp"
         }
     ],
-    "homepage": "https://jpay.vmart.vip/",
+    "homepage": "https://www.gba.one/",
     "require": {
         "php": ">=5.6.0",
         "ext-curl": "*",

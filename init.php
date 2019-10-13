@@ -1,13 +1,13 @@
 <?php
 
 if (!function_exists('curl_init')) {
-    throw new Exception('JPay needs the CURL PHP extension.');
+    throw new Exception('GBasJPay needs the CURL PHP extension.');
 }
 if (!function_exists('json_decode')) {
-    throw new Exception('JPay needs the JSON PHP extension.');
+    throw new Exception('GBasJPay needs the JSON PHP extension.');
 }
 if (!function_exists('mb_detect_encoding')) {
-    throw new Exception('JPay needs the Multibyte String PHP extension.');
+    throw new Exception('GBasJPay needs the Multibyte String PHP extension.');
 }
 
 // singleton

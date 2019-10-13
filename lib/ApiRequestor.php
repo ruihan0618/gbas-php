@@ -96,13 +96,13 @@ class ApiRequestor
     }
 
     /**
-     * @param $method
-     * @param $url
-     * @param null $params
-     * @param null $headers
-     * @return array
-     * @throws Authentication
-     * @throws Error\Api
+     * @param string $method
+     * @param string $url
+     * @param array|null $params
+     * @param array|null $headers
+     *
+     * @return array An array whose first element is the response and second
+     *    element is the API key used to make the request.
      */
     public function request($method, $url, $params = null, $headers = null)
     {
@@ -122,13 +122,14 @@ class ApiRequestor
 
 
     /**
-     * @param $rbody
-     * @param $rcode
-     * @param $resp
-     * @throws Authentication
-     * @throws Error\Api
-     * @throws Error\InvalidRequest
-     * @throws Error\RateLimit
+     * @param string $rbody A JSON string.
+     * @param int $rcode
+     * @param array $resp
+     *
+     * @throws InvalidRequestError if the error is caused by the user.
+     * @throws AuthenticationError if the error is caused by a lack of
+     *    permissions.
+     * @throws ApiError otherwise.
      */
     public function handleApiError($rbody, $rcode, $resp)
     {
@@ -163,6 +164,15 @@ class ApiRequestor
                 );
             case 401:
                 throw new Error\Authentication($msg, $rcode, $rbody, $resp);
+            case 402:
+                throw new Error\Channel(
+                    $msg,
+                    $code,
+                    $param,
+                    $rcode,
+                    $rbody,
+                    $resp
+                );
             default:
                 throw new Error\Api($msg, $rcode, $rbody, $resp);
         }
@@ -199,12 +209,39 @@ class ApiRequestor
 
         $absUrl = $this->_apiBase . $url;
 
+        $params = array_merge(['client_id'=>$myClientId], $params);
         $params = self::_encodeObjects($params, $method == 'post' || $method == 'put');
 
-        $defaultHeaders = [];
+
+        $langVersion = phpversion();
+        $uname = php_uname();
+        $ua = [
+            'bindings_version' => GBasJPay::VERSION,
+            'lang' => 'php',
+            'lang_version' => $langVersion,
+            'publisher' => 'GBasJPay',
+            'uname' => $uname,
+        ];
+        $defaultHeaders = [
+            'X-GBasJPay-Client-User-Agent' => json_encode($ua),
+            'User-Agent' => 'GBasJPay/v1 /' . GBasJPay::VERSION,
+            'Authorization' => 'CODE ' . base64_encode($myApiKey),
+        ];
+        if (GBasJPay::$apiVersion) {
+            $defaultHeaders['GBasJPay-Version'] = GBasJPay::$apiVersion;
+        }
         if ($method == 'post' || $method == 'put') {
             $defaultHeaders['Content-type'] = 'application/json;charset=UTF-8';
-            $defaultHeaders['Accept'] = 'application/json;charset=UTF-8';
+        }
+        if ($method == 'put') {
+            $defaultHeaders['X-HTTP-Method-Override'] = 'PUT';
+        }
+        $requestHeaders = Util\Util::getRequestHeaders();
+        if (isset($requestHeaders['GBasJPay-Sdk-Version'])) {
+            $defaultHeaders['GBasJPay-Sdk-Version'] = $requestHeaders['GBasJPay-Sdk-Version'];
+        }
+        if (isset($requestHeaders['GBasJPay-One-Version'])) {
+            $defaultHeaders['GBasJPay-One-Version'] = $requestHeaders['GBasJPay-One-Version'];
         }
 
         $combinedHeaders = array_merge($defaultHeaders, $headers);
@@ -280,6 +317,18 @@ class ApiRequestor
             }
         } else {
             throw new Error\Api("Unrecognized method $method");
+        }
+
+        if ($this->privateKey()) {
+            if ($requestTime !== null) {
+                $dataToBeSign .= $requestTime;
+                $headers[] = 'GBasJPay-Request-Timestamp: ' . $requestTime;
+            }
+            $signResult = openssl_sign($dataToBeSign, $requestSignature, $this->privateKey(), 'sha256');
+            if (!$signResult) {
+                throw new Error\Api("Generate signature failed");
+            }
+            $headers[] = 'GBasJPay-Signature: ' . base64_encode($requestSignature);
         }
 
         $absUrl = Util\Util::utf8($absUrl);
