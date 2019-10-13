@@ -1,6 +1,6 @@
 # GBasJPay PHP bindings
 
-You can sign up for a GBasJPay account at https://jpay.vmart.vip.
+You can sign up for a GBasJPay account at https://www.gba.one.
 
 ## Requirements
 
@@ -11,7 +11,7 @@ PHP 5.6.0 and later.
 You can install the bindings via [Composer](http://getcomposer.org/). Run the following command:
 
 ```bash
-composer require jpaypp/jpay-php
+composer require jpaypp/gbas-php
 ```
 
 To use the bindings, use Composer's [autoload](https://getcomposer.org/doc/01-basic-usage.md#autoloading):
@@ -83,7 +83,7 @@ try {
 
 ## Documentation
 
-Please see https://jpay.vmart.vip/api for up-to-date documentation.
+Please see https://www.gba.one/api for up-to-date documentation.
 
 ## Development
 
